@@ -1,19 +1,28 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { Button, Form, Input } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Form, Input, message } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import "./css/login.css";
+import "./less/login.less";
 import Logoimg from "../assets/logo1.png";
 import { RegisterApi } from "../request/api";
 
 export default function Register() {
+  const navigate = useNavigate();
   const onFinish = (values) => {
     console.log("Success:", values);
     RegisterApi({
       username: values.username,
       password: values.password,
     }).then((res) => {
-      console.log(res);
+      if (res.errCode === 0) {
+        message.success(res.message);
+        // 跳到登录页
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
+      } else {
+        message.error(res.message);
+      }
     }); //跨域
   };
   return (
