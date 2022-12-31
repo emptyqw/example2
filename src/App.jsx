@@ -1,5 +1,5 @@
 import React from "react";
-import "./assets/base.css";
+import "./assets/base.less";
 import { Outlet } from "react-router-dom";
 import { Layout } from "antd";
 import Header from "./component/Header";

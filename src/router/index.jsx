@@ -15,9 +15,10 @@ const BaseRouter = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>
-      <Route path="/table" element={<ListTable />}></Route>
+        <Route path="/table" element={<ListTable />}></Route>
         <Route path="/list" element={<ListList />}></Route>
         <Route path="/edit" element={<Edit />}></Route>
+        <Route path="/edit/:id" element={<Edit />}></Route>
         <Route path="/means" element={<Means />}></Route>
       </Route>
       <Route path="/login" element={<Login />}></Route>
