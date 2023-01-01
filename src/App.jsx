@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import "./assets/base.less";
 import { Outlet } from "react-router-dom";
 import { Layout } from "antd";
@@ -7,15 +7,16 @@ import Aside from "./component/Aside";
 import Bread from "./component/Bread";
 
 export default function App() {
+  const [mykey, setMykey] = useState(1);
   return (
     <Layout id="app">
-      <Header />
+      <Header key={mykey} />
       <div className="container">
         <Aside />
         <div className="container_box">
           <Bread />
           <div className="container_content">
-            <Outlet />
+            <Outlet setMykey={setMykey} />
           </div>
         </div>
       </div>

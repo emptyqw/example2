@@ -1,22 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { PageHeader } from "@ant-design/pro-layout";
-import { Button, Modal, Form, Input } from "antd";
+import { Button, Modal, Form, Input, message } from "antd";
 import moment from "moment/moment";
 import E from "wangeditor";
-import { ArticleAddApi } from "../request/api";
-import { useParams } from "react-router-dom";
+import {
+  ArticleAddApi,
+  ArticleSearchApi,
+  ArticleUpdateApi,
+} from "../request/api";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 let editor = null;
 export default function Edit() {
   const [content, setContent] = useState("");
+  const [title, setTitle] = useState("");
+  const [subTitle, setSubTitle] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const [open, setOpen] = useState(false);
   const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // 处理数据
+  const dealData = (errCode, msg) => {
+    if (errCode === 0) {
+      setIsModalOpen(false); //关闭对话框
+      message.success(msg);
+      // 调回list页面
+      setTimeout(() => {
+        navigate("/list");
+      }, 1000);
+    } else {
+      message.error(msg);
+    }
+  };
 
   // 对话框点击提交
   const handleOk = () => {
-    setIsModalOpen(false); //关闭对话框
     form
       .validateFields() //校验字段
       .then((values) => {
@@ -24,9 +44,20 @@ export default function Edit() {
         console.log("Received values of form: ", values);
         // 请求数据
         let { title, subTitle } = values;
-        ArticleAddApi({ title, subTitle, content }).then((res) => {
-          console.log(res);
-        });
+        // 地址栏有id就更新文章
+        if (params.id) {
+          // 更新文章请求
+          ArticleUpdateApi({ title, subTitle, content, id: params.id }).then(
+            (res) => {
+              dealData(res.errCode, res.message);
+            }
+          );
+        } else {
+          // 添加文章请求
+          ArticleAddApi({ title, subTitle, content }).then((res) => {
+            dealData(res.errCode, res.message);
+          });
+        }
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
@@ -39,10 +70,21 @@ export default function Edit() {
       setContent(newHtml);
     };
     editor.create();
+
+    // 根据地址栏id做请求
+    if (params.id) {
+      ArticleSearchApi({ id: params.id }).then((res) => {
+        if (res.errCode === 0) {
+          editor.txt.html(res.data.content); //重新设置编辑器的内容
+          setTitle(res.data.title);
+          setSubTitle(res.data.subTitle);
+        }
+      });
+    }
     return () => {
       editor.destroy();
     };
-  }, []);
+  }, [location.pathname]);
 
   return (
     <div>
@@ -79,10 +121,8 @@ export default function Edit() {
             wrapperCol={{
               span: 19,
             }}
-            initialValues={{
-              remember: true,
-            }}
             autoComplete="off"
+            initialValues={{ title, subTitle }}
           >
             <Form.Item
               label="标题"

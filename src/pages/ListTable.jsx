@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, Button } from "antd";
-import { ArticleListApi } from "../request/api";
+import { Space, Table, Button, message } from "antd";
+import { ArticleListApi, ArticleDelApi } from "../request/api";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 import "./less/ListTable.less";
 
 // 标题组件MyTitle
@@ -23,6 +24,7 @@ function MyTitle(props) {
 
 // 从后端拿的数据要替换这个data数组
 export default function ListTable() {
+  const navigate = useNavigate();
   // 列表数组
   const [arr, setArr] = useState([]);
   // 分页
@@ -80,6 +82,16 @@ export default function ListTable() {
   const pageChange = (arg) => {
     getArticleList(arg.current, arg.pageSize);
   };
+
+  const delFn = (id) => {
+    ArticleDelApi({ id }).then((res) => {
+      if (res.errCode === 0) {
+        message.success(res.message);
+        // 重新请求数据  调用getList() 增加变量监测
+        getArticleList(pagination.current, pagination.pageSize);
+      }
+    });
+  };
   const columns = [
     {
       title: "Name",
@@ -99,10 +111,10 @@ export default function ListTable() {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Button type="primary" onClick={() => console.log(record.key)}>
+          <Button type="primary" onClick={() => navigate("/edit/" + record.key)}>
             编辑
           </Button>
-          <Button type="primary" danger onClick={() => console.log(record.key)}>
+          <Button type="primary" danger onClick={() => delFn(record.key)}>
             删除
           </Button>
         </Space>

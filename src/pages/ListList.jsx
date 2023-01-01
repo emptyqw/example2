@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./less/ListTable.less";
-import { List, Skeleton, Pagination, Button } from "antd";
-import { ArticleListApi } from "../request/api";
+import { List, Skeleton, Pagination, Button, message } from "antd";
+import { ArticleListApi, ArticleDelApi } from "../request/api";
 import { useNavigate } from "react-router-dom";
 import moment from "moment/moment";
 
@@ -11,6 +11,7 @@ export default function ListList() {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
+  const [update, setUpdate] = useState(1);
 
   // 请求封装
   const getList = (num) => {
@@ -33,10 +34,27 @@ export default function ListList() {
     getList(current);
   }, []);
 
+  // 模拟componentDidUpdate
+  useEffect(() => {
+    getList(current);
+  }, [update]);
+
   // 分页
   const onChange = (pages) => {
     getList(pages);
   };
+
+  // 删除
+  const delFn = (id) => {
+    ArticleDelApi({ id }).then((res) => {
+      if (res.errCode === 0) {
+        message.success(res.message);
+        // 重新请求数据  调用getList() 增加变量监测
+        setUpdate(update + 1);
+      }
+    });
+  };
+
   return (
     <div className="list_table">
       <List
@@ -53,11 +71,7 @@ export default function ListList() {
                 >
                   编辑
                 </Button>,
-                <Button
-                  type="primary"
-                  danger
-                  onClick={() => console.log(item.id)}
-                >
+                <Button type="primary" danger onClick={() => delFn(item.id)}>
                   删除
                 </Button>,
               ]}

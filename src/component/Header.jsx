@@ -9,6 +9,7 @@ export default function Header() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("游客");
   const [avatar, setAvatar] = useState(defaultAvatar);
+
   //   模拟componentDidmount
   useEffect(() => {
     let username1 = localStorage.getItem("username");
@@ -19,7 +20,8 @@ export default function Header() {
     if (avatar1) {
       setAvatar("http://47.93.114.103:6688/" + avatar1);
     }
-  }, []);
+  }, [localStorage.getItem("avatar")]);
+
   //   退出登录
   const logout = () => {
     // 清除数据
