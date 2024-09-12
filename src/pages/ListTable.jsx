@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Space, Table, Button } from "antd";
-import { ArticleListApi } from "../request/api";
+import { Space, Table, Button, message } from "antd";
+import { ArticleListApi, ArticleDelApi } from "../request/api";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 import "./less/ListTable.less";
 
 // 标题组件MyTitle
@@ -9,9 +10,10 @@ function MyTitle(props) {
   return (
     <div>
       <a
-        herf={"http://codesohigh.com:8765/article/" + props.id}
+        href={"http://codesohigh.com:8765/article/" + props.id}
         className="table_title"
         target="_blank"
+        rel="noreferrer"
       >
         {props.title}
       </a>
@@ -22,19 +24,30 @@ function MyTitle(props) {
 
 // 从后端拿的数据要替换这个data数组
 export default function ListTable() {
+  const navigate = useNavigate();
   // 列表数组
-  const [arr, setArr] = useState([
-    {
-      key: "1",
-      name: "John Brown",
-      address: "New York No. 1 Lake Park",
-    },
-  ]);
+  const [arr, setArr] = useState([]);
+  // 分页
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 10,
+  });
 
-  //   请求文章列表
-  useEffect(() => {
-    ArticleListApi().then((res) => {
+  // 提取请求的代码
+  const getArticleList = (current, pageSize) => {
+    ArticleListApi({
+      num: current,
+      count: pageSize,
+    }).then((res) => {
       if (res.errCode === 0) {
+        // 更改pagination
+        let { num, count, total } = res.data;
+        setPagination({
+          current: num,
+          pageSize: count,
+          total,
+        });
         // 深拷贝获取数组
         let newArr = JSON.parse(JSON.stringify(res.data.arr));
         let myarr = [];
@@ -53,11 +66,32 @@ export default function ListTable() {
             ),
           };
           myarr.push(obj);
+          return obj;
         });
         setArr(myarr);
       }
     });
-  }, []);
+  };
+
+  //   请求文章列表
+  useEffect(() => {
+    getArticleList(pagination.current, pagination.pageSize);
+  }, [pagination]);
+
+  // 分页函数
+  const pageChange = (arg) => {
+    getArticleList(arg.current, arg.pageSize);
+  };
+
+  const delFn = (id) => {
+    ArticleDelApi({ id }).then((res) => {
+      if (res.errCode === 0) {
+        message.success(res.message);
+        // 重新请求数据  调用getList() 增加变量监测
+        getArticleList(pagination.current, pagination.pageSize);
+      }
+    });
+  };
   const columns = [
     {
       title: "Name",
@@ -77,8 +111,10 @@ export default function ListTable() {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Button type="primary">编辑</Button>
-          <Button type="primary" danger>
+          <Button type="primary" onClick={() => navigate("/edit/" + record.key)}>
+            编辑
+          </Button>
+          <Button type="primary" danger onClick={() => delFn(record.key)}>
             删除
           </Button>
         </Space>
@@ -87,7 +123,13 @@ export default function ListTable() {
   ];
   return (
     <div className="list_table">
-      <Table columns={columns} dataSource={arr} />;
+      <Table
+        columns={columns}
+        dataSource={arr}
+        onChange={pageChange}
+        pagination={pagination}
+      />
+      ;
     </div>
   );
 }
